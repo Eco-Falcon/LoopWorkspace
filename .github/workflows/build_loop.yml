@@ -1,6 +1,9 @@
 name: 4. Build Loop
 run-name: Build Loop (${{ github.ref_name }})
 on:
+  push:
+    branches:
+      - main       # Pas aan als je target branch anders heet (bijv. dev of master)
   workflow_dispatch:
   schedule:
     # Check for updates every Sunday
@@ -157,6 +160,7 @@ jobs:
       uses: ./.github/workflows/create_certs.yml
       secrets: inherit
       if: |
+        github.event_name == 'push' ||
         github.event_name == 'workflow_dispatch' ||
           (vars.SCHEDULED_BUILD != 'false' && needs.check_status.outputs.IS_SECOND_IN_MONTH == 'true') ||
           (vars.SCHEDULED_SYNC != 'false' && needs.check_status.outputs.NEW_COMMITS == 'true' )
@@ -169,7 +173,8 @@ jobs:
     permissions:
       contents: write
     if:
-      | # builds with manual start; if scheduled: once a month or when new commits are found
+      | # builds with push, manual start; if scheduled: once a month or when new commits are found
+      github.event_name == 'push' ||
       github.event_name == 'workflow_dispatch' ||
         (vars.SCHEDULED_BUILD != 'false' && needs.check_status.outputs.IS_SECOND_IN_MONTH == 'true') ||
         (vars.SCHEDULED_SYNC != 'false' && needs.check_status.outputs.NEW_COMMITS == 'true' )
